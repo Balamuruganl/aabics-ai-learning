@@ -3,7 +3,7 @@ from google.adk.tools import google_search
 
 investment_plan_agent = LlmAgent(
     name="investment_plan_agent",
-    model="gemini-2.5-flash-lite",
+    model="gemini-3.5-flash-lite",
     description=" An investment plan assistant who can use Google Search to find latest information " \
     "and assist users in creating a savings plan",
     instruction="""You are a friendly finance assistant. 

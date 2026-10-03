@@ -1,2 +1,2 @@
 # aabics-ai-learning
-This repo is created to learn AI
+This repo is created to learn Agentic AI
