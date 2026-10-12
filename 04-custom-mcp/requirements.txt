@@ -1,0 +1,4 @@
+mcp[cli]
+psycopg[binary]
+python-dotenv
+google-adk[mcp]
