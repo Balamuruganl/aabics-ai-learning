@@ -74,6 +74,86 @@ def upload_file_to_bucket(BUCKET_NAME) -> dict:
         "gs_uri": f"gs://{BUCKET_NAME}/products.csv",
     }
 
+def create_bigquery_dataset_and_table() -> dict:
+    """Create the configured BigQuery dataset and products table if needed."""
+    client = bigquery.Client(project=PROJECT_ID)
+
+    dataset_id = f"{PROJECT_ID}.{DATASET_ID}"
+    dataset = bigquery.Dataset(dataset_id)
+    dataset.location = REGION
+
+    client.create_dataset(dataset, exists_ok=True)
+
+    table_id = f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}"
+
+    schema = [
+        bigquery.SchemaField("product_id", "INT64", mode="REQUIRED"),
+        bigquery.SchemaField("product_name", "STRING", mode="REQUIRED"),
+        bigquery.SchemaField("category", "STRING", mode="REQUIRED"),
+        bigquery.SchemaField("price", "NUMERIC", mode="REQUIRED"),
+    ]
+
+    table = bigquery.Table(table_id, schema=schema)
+    table = client.create_table(table, exists_ok=True)
+
+    return {
+        "status": "ready",
+        "dataset": dataset_id,
+        "table": table.full_table_id,
+        "location": REGION,
+        "columns": [
+            "product_id INT64",
+            "product_name STRING",
+            "category STRING",
+            "price NUMERIC",
+        ],
+    }
+
+def insert_sample_rows() -> dict:
+    """Insert three sample organic products into the configured BigQuery table."""
+    client = bigquery.Client(project=PROJECT_ID)
+
+    table_id = f"{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}"
+
+    rows = [
+        {
+            "product_id": 1,
+            "product_name": "Sprouted Ragi Flour",
+            "category": "Millets",
+            "price": "4.99",
+        },
+        {
+            "product_id": 2,
+            "product_name": "Organic Brown Rice",
+            "category": "Rice",
+            "price": "6.49",
+        },
+        {
+            "product_id": 3,
+            "product_name": "Sprouted Green Gram",
+            "category": "Pulses",
+            "price": "3.99",
+        },
+    ]
+
+    errors = client.insert_rows_json(table_id, rows)
+
+    if errors:
+        return {
+            "status": "error",
+            "table": table_id,
+            "errors": errors,
+        }
+
+    return {
+        "status": "inserted",
+        "table": table_id,
+        "rows_inserted": len(rows),
+        "product_names": [
+            row["product_name"] for row in rows
+        ],
+    }
+
 root_agent = LlmAgent(
     name="gcp_resource_agent",
     model="gemini-3.5-flash-lite",
@@ -84,6 +164,8 @@ You are a GCP resource management assistant.
 Use the provided tools to perform these tasks:
 1. Create any Cloud Storage bucket.
 2. Upload products.csv to the specified bucket only when asked.
+3. Create a BigQuery dataset and table for products only when asked.
+4. Insert sample rows into the BigQuery products table only when asked.
 
 
 Rules:
@@ -100,9 +182,12 @@ GCP project: {PROJECT_ID}
 
 
 
+
 """,
     tools=[
         create_gcs_bucket,
         upload_file_to_bucket,
+        create_bigquery_dataset_and_table,
+        insert_sample_rows,
     ],
 )
