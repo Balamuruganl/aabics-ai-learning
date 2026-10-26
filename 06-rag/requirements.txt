@@ -1,0 +1,4 @@
+pypdf
+google-genai
+psycopg[binary]
+pgvector
