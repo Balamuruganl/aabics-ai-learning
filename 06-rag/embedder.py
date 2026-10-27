@@ -1,15 +1,19 @@
 from google import genai
 from google.genai.types import EmbedContentConfig
 
-client = genai.Client()
+client = genai.Client(
+    vertexai=True,
+    project="aabics-ai-learning",
+    location="global"
+)
 
-def generate_embedding(text: str) -> list[float]:
+def generate_embedding(text: str,  task_type: str = "RETRIEVAL_DOCUMENT") -> list[float]:
 
     response = client.models.embed_content(
         model="gemini-embedding-001",
         contents=text,
         config=EmbedContentConfig(
-            task_type="RETRIEVAL_DOCUMENT",
+            task_type= task_type,
             output_dimensionality=1536
         )
     )
